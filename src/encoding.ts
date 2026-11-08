@@ -41,6 +41,13 @@ export function detectEncoding(bytes: Uint8Array): { enc: EncName; text: string 
   return { enc: 'latin1', text: new TextDecoder('windows-1252').decode(bytes) }
 }
 
+/** 二进制嗅探:前 4KB 含 0x00 视为二进制(UTF-16 BOM 由调用方先行排除) */
+export function looksBinary(bytes: Uint8Array): boolean {
+  const n = Math.min(bytes.length, 4096)
+  for (let i = 0; i < n; i++) if (bytes[i] === 0) return true
+  return false
+}
+
 /** 采样判断换行符(前 100KB 内多数派) */
 export function detectEol(text: string): Eol {
   const s = text.slice(0, 100_000)

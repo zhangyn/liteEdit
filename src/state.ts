@@ -20,6 +20,10 @@ export interface Tab {
   langLabel: string
   /** 已加载的语法包(激活时统一挂到 langComp) */
   langSupport?: LanguageSupport | null
+  /** 二进制文件:十六进制只读模式 */
+  hex?: boolean
+  hexData?: Uint8Array
+  hexTruncated?: boolean
   dirty: boolean
 }
 
@@ -45,6 +49,8 @@ export interface Settings {
   tabsBottom: boolean
   menuHidden: boolean
   dupHighlight: boolean
+  fontFamily: string
+  lineHeight: number
   fontSize: number
 }
 
@@ -54,7 +60,7 @@ export const settings: Settings = (() => {
   const def: Settings = {
     theme: 'light', wrap: false, whitespace: false, sidebar: true,
     preview: false, toolbar: true, tabsBottom: false, menuHidden: false,
-    dupHighlight: false, fontSize: 14,
+    dupHighlight: false, fontFamily: 'Consolas', lineHeight: 1.55, fontSize: 14,
   }
   try {
     const raw = localStorage.getItem(SET_KEY)

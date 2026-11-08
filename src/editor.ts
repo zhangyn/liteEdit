@@ -21,7 +21,7 @@ import {
 import { bracketMatching, indentOnInput, indentUnit, syntaxHighlighting, HighlightStyle, foldGutter, foldKeymap, type LanguageSupport } from '@codemirror/language'
 import { history, historyKeymap, defaultKeymap, indentWithTab, moveLineUp, moveLineDown } from '@codemirror/commands'
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
-import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
+import { highlightSelectionMatches, search, searchKeymap, selectNextOccurrence } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { cursorHistoryKeymap } from './cursor-history'
 import { settings } from './state'
@@ -249,7 +249,7 @@ const cmTheme = EditorView.theme({
     caretColor: 'var(--accent)',
     fontFamily: 'var(--font-mono)',
     fontSize: 'var(--ed-font-size)',
-    lineHeight: '1.55',
+    lineHeight: 'var(--ed-line-height, 1.55)',
   },
   '.cm-scroller': { overflow: 'auto' },
   '.cm-gutters': { backgroundColor: 'var(--bg-gutter)', color: 'var(--fg-dim)', border: 'none', fontSize: '12px' },
@@ -325,6 +325,7 @@ export function baseExtensions(): Extension[] {
       // 必须先于 CM 内置键表:Mod-d 被 searchKeymap 占用,Mod-Enter/Mod-Alt-Arrow 也有内置绑定
       ...cursorHistoryKeymap,
       { key: 'Mod-d', run: duplicateLine },
+      { key: 'Mod-Alt-d', run: selectNextOccurrence },
       { key: 'Mod-Alt-ArrowUp', run: moveLineUp },
       { key: 'Mod-Alt-ArrowDown', run: moveLineDown },
       { key: 'Mod-Enter', run: openLineBelow },

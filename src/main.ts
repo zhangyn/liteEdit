@@ -4,7 +4,7 @@ import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { message } from '@tauri-apps/plugin-dialog'
 import { undo, redo, deleteLine, moveLineUp, moveLineDown } from '@codemirror/commands'
-import { gotoLine, openSearchPanel, findNext, findPrevious } from '@codemirror/search'
+import { gotoLine, openSearchPanel, findNext, findPrevious, selectNextOccurrence } from '@codemirror/search'
 import { createView, applyTabCompartments, hooks, duplicateLine, openLineBelow, openLineAbove, toggleBookmark, gotoBookmark, toggleDupHighlight } from './editor'
 import { store, settings, saveSettings, activeTab } from './state'
 import { ipc } from './ipc'
@@ -15,7 +15,7 @@ import {
 import { recordCursor } from './cursor-history'
 import { applyTool } from './tools'
 import { codecActions } from './codecs'
-import { initFindInFiles, openFindInFilesDialog } from './findinfiles'
+import { initFindInFiles, openFindInFilesDialog, exportFindResults } from './findinfiles'
 import { initToolbar, applyToolbarVisible, refreshToolbarStates } from './toolbar'
 
 /** 全局快捷键兜底表(原生菜单加速键失效时也能用;同一动作 120ms 内去重防双触发) */
@@ -28,6 +28,7 @@ const KEY_ACTIONS: Record<string, string> = {
   'Ctrl+Shift+f': 'find_in_files',
   'Ctrl+g': 'goto', 'Ctrl+d': 'duplicate_line', 'Ctrl+Shift+k': 'delete_line',
   'Ctrl+Alt+ArrowUp': 'move_line_up', 'Ctrl+Alt+ArrowDown': 'move_line_down',
+  'Ctrl+Alt+d': 'select_next_occurrence',
   'Ctrl+Enter': 'open_line_below', 'Ctrl+Shift+Enter': 'open_line_above',
   'Ctrl+Shift+u': 'to_upper', 'Ctrl+u': 'to_lower', 'Ctrl+;': 'insert_datetime',
   'Ctrl+Alt+w': 'toggle_wrap', 'Ctrl+b': 'toggle_sidebar', 'Ctrl+Alt+v': 'toggle_preview',
@@ -119,6 +120,58 @@ function insertDatetime(): boolean {
   const stamp = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
   view.dispatch(view.state.replaceSelection(stamp))
   return true
+}
+
+/** 字体设置对话框(等宽字体 + 行距) */
+function openFontDialog() {
+  const layer = document.getElementById('modal-layer')!
+  layer.innerHTML = ''
+  const mask = document.createElement('div')
+  mask.className = 'modal-mask'
+  const box = document.createElement('div')
+  box.className = 'modal-box'
+  const FONTS = ['Consolas', 'Cascadia Mono', 'Courier New', 'JetBrains Mono', 'SimSun', 'Microsoft YaHei']
+  const LHS = [1.2, 1.4, 1.55, 1.8]
+  box.innerHTML = `
+    <div class="modal-msg">字体设置(编辑器)</div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:12px;color:var(--fg-dim);margin-bottom:4px">等宽字体</div>
+      <select id="font-sel" style="width:100%;padding:6px 8px;font:inherit;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);outline:none">
+        ${FONTS.map((f) => `<option value="${f}"${f === settings.fontFamily ? ' selected' : ''}>${f}</option>`).join('')}
+      </select>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--fg-dim);margin-bottom:4px">行距</div>
+      <select id="lh-sel" style="width:100%;padding:6px 8px;font:inherit;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--fg);outline:none">
+        ${LHS.map((l) => `<option value="${l}"${l === settings.lineHeight ? ' selected' : ''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button id="font-cancel">取消</button>
+      <button id="font-ok" class="primary">确定</button>
+    </div>`
+  mask.appendChild(box)
+  layer.appendChild(mask)
+  layer.classList.add('visible')
+  const close = () => {
+    layer.classList.remove('visible')
+    layer.innerHTML = ''
+  }
+  box.querySelector('#font-cancel')!.addEventListener('click', close)
+  box.querySelector('#font-ok')!.addEventListener('click', () => {
+    const family = (box.querySelector('#font-sel') as HTMLSelectElement).value
+    const lh = Number((box.querySelector('#lh-sel') as HTMLSelectElement).value)
+    applyFont(family, lh)
+    close()
+  })
+}
+
+function applyFont(family: string, lineHeight: number) {
+  settings.fontFamily = family
+  settings.lineHeight = lineHeight
+  saveSettings()
+  document.documentElement.style.setProperty('--font-mono', `'${family}', 'Cascadia Mono', monospace`)
+  document.documentElement.style.setProperty('--ed-line-height', String(lineHeight))
 }
 
 // ── 菜单动作分发 ────────────────────────────────────────
@@ -259,6 +312,12 @@ async function dispatchAction(id: string) {
       break
     case 'toggle_menubar':
       applyMenuHidden(!settings.menuHidden)
+      break
+    case 'select_next_occurrence':
+      selectNextOccurrence(view)
+      break
+    case 'font_settings':
+      openFontDialog()
       break
     case 'zoom_in':
       applyFontSize(settings.fontSize + 1)
@@ -417,6 +476,10 @@ async function boot() {
   document.getElementById('btn-menu-restore')!.classList.toggle('hidden', !settings.menuHidden)
   if (settings.menuHidden) void ipc.setMenuVisible(false)
 
+  // 字体与行距偏好
+  document.documentElement.style.setProperty('--font-mono', `'${settings.fontFamily}', 'Cascadia Mono', monospace`)
+  document.documentElement.style.setProperty('--ed-line-height', String(settings.lineHeight))
+
   syncMenuChecks()
   startWatch()
   store.view.focus()
@@ -432,4 +495,6 @@ void boot().catch((e) => {
   store,
   applyTool,
   dispatch: (id: string) => dispatchAction(id),
+  openPath: (p: string) => openPath(p),
+  findExport: (p?: string) => exportFindResults(p),
 }

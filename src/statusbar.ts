@@ -23,6 +23,15 @@ export function refreshStatus() {
     el('st-enc').textContent = ''
     return
   }
+  if (tab.hex) {
+    el('st-pos').textContent = '十六进制(只读)'
+    el('st-sel').textContent = ''
+    el('st-size').textContent = formatBytes(tab.fileSize)
+    el('st-lang').textContent = '二进制'
+    el('st-eol').textContent = '—'
+    el('st-enc').textContent = '—'
+    return
+  }
   const state = view.state
   const head = state.selection.main.head
   const line = state.doc.lineAt(head)

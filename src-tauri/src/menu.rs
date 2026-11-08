@@ -54,9 +54,13 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .item(&MenuItem::with_id(app, "to_lower", "转换为小写  Ctrl+U", true, None::<&str>)?)
         .item(&MenuItem::with_id(app, "insert_datetime", "插入日期时间  Ctrl+;", true, None::<&str>)?)
         .separator()
+        .item(&MenuItem::with_id(app, "select_next_occurrence", "选中下一个相同词  Ctrl+Alt+D", true, None::<&str>)?)
+        .separator()
         .item(&MenuItem::with_id(app, "toggle_bookmark", "切换书签  Ctrl+F2", true, None::<&str>)?)
         .item(&MenuItem::with_id(app, "next_bookmark", "下一个书签  F2", true, None::<&str>)?)
         .item(&MenuItem::with_id(app, "prev_bookmark", "上一个书签  Shift+F2", true, None::<&str>)?)
+        .separator()
+        .item(&MenuItem::with_id(app, "font_settings", "字体设置…", true, None::<&str>)?)
         .build()?;
 
     // ── 搜索 ──────────────────────────────────────────────

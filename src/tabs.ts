@@ -2,7 +2,7 @@ import { EditorState } from '@codemirror/state'
 import { open as openDialog, save as saveDialog } from '@tauri-apps/plugin-dialog'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { ipc } from './ipc'
-import { decodeAs, detectEncoding, detectEol, normalizeEol } from './encoding'
+import { decodeAs, detectEncoding, detectEol, looksBinary, normalizeEol } from './encoding'
 import { langFor } from './langs'
 import { baseExtensions, applyTabCompartments, hooks } from './editor'
 import { activeTab, store, type EncName, type Tab } from './state'
@@ -146,6 +146,40 @@ export async function openPath(path: string, opts: { silent?: boolean } = {}): P
     const ok = await confirmModal(`文件超过 20MB(${(bytes.length / 1048576).toFixed(1)} MB),打开可能较慢。继续吗?`)
     if (!ok) return null
   }
+  // 二进制检测:BOM 之外的 0x00 字节视为二进制 → 十六进制只读查看
+  const hasBom = (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) ||
+    (bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff)
+  if (!hasBom && looksBinary(bytes)) {
+    if (!opts.silent) {
+      const ok = await confirmModal(`「${basename(path)}」是二进制文件,以十六进制模式打开吗?`)
+      if (!ok) return null
+    }
+    const HEX_CAP = 16 * 1024 * 1024
+    const st = makeState('')
+    const t: Tab = {
+      id: nextId++,
+      path,
+      name: basename(path),
+      state: st,
+      scrollTop: 0,
+      clean: st.doc,
+      encoding: 'latin1',
+      eol: '\n',
+      mtimeMs: 0,
+      fileSize: bytes.length,
+      langLabel: '二进制',
+      hex: true,
+      hexData: bytes.length > HEX_CAP ? bytes.subarray(0, HEX_CAP) : bytes,
+      hexTruncated: bytes.length > HEX_CAP,
+      dirty: false,
+    }
+    void ipc.statFile(path).then((r) => {
+      t.mtimeMs = r.mtime_ms
+    }).catch(() => {})
+    addTab(t)
+    addRecent(path)
+    return t
+  }
   const { enc, text } = detectEncoding(bytes)
   const docText = text.replace(/\r\n?/g, '\n')
   const st = makeState(docText)
@@ -205,6 +239,10 @@ export function activate(id: number) {
   // 语言/换行/空白符随激活标签统一挂载(后台标签不修改 state)
   applyTabCompartments(view, t)
   view.scrollDOM.scrollTop = t.scrollTop
+  // 二进制标签:切换到十六进制视图
+  document.getElementById('editor-host')!.classList.toggle('hidden', !!t.hex)
+  document.getElementById('hexview')!.classList.toggle('hidden', !t.hex)
+  if (t.hex) renderHex(t)
   renderTabs()
   refreshStatus()
   updateTitle()
@@ -214,8 +252,34 @@ export function activate(id: number) {
   saveSession()
 }
 
+/** 生成十六进制转储文本(超大文件截断显示) */
+function renderHex(t: Tab) {
+  const pre = document.getElementById('hexview-pre')!
+  const bytes = t.hexData!
+  const DISPLAY = 256 * 1024
+  const limit = Math.min(bytes.length, DISPLAY)
+  const lines: string[] = []
+  for (let off = 0; off < limit; off += 16) {
+    const chunk = bytes.subarray(off, Math.min(off + 16, limit))
+    let hex = ''
+    let ascii = ''
+    for (const b of chunk) {
+      hex += b.toString(16).padStart(2, '0') + ' '
+      ascii += b >= 32 && b < 127 ? String.fromCharCode(b) : '·'
+    }
+    lines.push(off.toString(16).padStart(8, '0') + '  ' + hex.padEnd(48) + ' |' + ascii + '|')
+  }
+  if (t.hexTruncated) lines.push(`… 仅显示前 ${(DISPLAY / 1024) | 0} KB,共 ${bytes.length} 字节`)
+  pre.textContent = lines.join('\n')
+}
+
+/** 保存前拦截:十六进制模式只读 */
 // ── 保存 ────────────────────────────────────────────────
 export async function saveTab(t: Tab, as = false): Promise<boolean> {
+  if (t.hex) {
+    toast('十六进制查看为只读')
+    return false
+  }
   let path = t.path
   if (!path || as) {
     const p = await saveDialog({

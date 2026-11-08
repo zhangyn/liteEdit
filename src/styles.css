@@ -23,6 +23,7 @@
   --syn-op: #57606a;
   --syn-meta: #57606a;
   --ed-font-size: 14px;
+  --ed-line-height: 1.55;
   --font-ui: 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
   --font-mono: Consolas, 'Cascadia Mono', 'Microsoft YaHei', monospace;
 }
@@ -225,6 +226,20 @@ button {
   z-index: 5;
 }
 #empty-hint.hidden { display: none; }
+#editor-host.hidden { display: none; }
+/* ── 十六进制查看器 ───────────────────────────────────── */
+#hexview { flex: 1; min-width: 0; display: flex; overflow: auto; background: var(--bg); }
+#hexview.hidden { display: none; }
+#hexview-pre {
+  margin: 0;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg);
+  user-select: text;
+  white-space: pre;
+}
 
 /* ── 侧栏 ─────────────────────────────────────────────── */
 #sidebar {
