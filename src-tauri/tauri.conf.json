@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LiteEdit",
+  "version": "0.1.0",
+  "identifier": "com.litedit.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "LiteEdit",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 660,
+        "minHeight": 420,
+        "center": true,
+        "dragDropEnabled": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "txt", "md", "markdown", "log", "json", "js", "mjs", "cjs", "ts",
+          "jsx", "tsx", "html", "htm", "css", "scss", "less", "xml", "svg",
+          "yaml", "yml", "toml", "ini", "cfg", "conf", "py", "rs", "c", "h",
+          "cpp", "hpp", "cc", "java", "go", "sql", "sh", "bat", "cmd", "ps1",
+          "php", "rb", "lua"
+        ],
+        "name": "LiteEdit 文档",
+        "role": "Editor"
+      }
+    ],
+    "shortDescription": "轻量文本编辑器",
+    "windows": {
+      "nsis": {
+        "languages": ["SimpChinese"],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

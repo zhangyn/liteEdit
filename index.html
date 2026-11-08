@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiteEdit</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <div id="toolbar" class="hidden"></div>
+    <div id="tabbar">
+      <div id="tabs" role="tablist"></div>
+      <div id="tabbar-right">
+        <button id="btn-menu-restore" class="tabbar-btn hidden" title="显示菜单栏 (Ctrl+M)">☰ 菜单</button>
+        <button id="btn-recents" class="tabbar-btn" title="最近打开的文件">最近 ▾</button>
+      </div>
+    </div>
+
+    <div id="main">
+      <div id="sidebar">
+        <div id="sidebar-head">
+          <span>资源管理器</span>
+          <button id="btn-sidebar-root" class="icon-btn" title="打开文件夹作为根目录">📂</button>
+        </div>
+        <div id="filetree"></div>
+      </div>
+      <div id="editor-host"></div>
+      <div id="preview-pane">
+        <div id="preview-head">
+          <span id="preview-title">预览</span>
+          <button id="btn-preview-close" class="icon-btn" title="关闭预览">×</button>
+        </div>
+        <div id="preview-body"></div>
+      </div>
+      <div id="empty-hint">Ctrl+O 打开文件,或把文件拖进窗口</div>
+    </div>
+
+    <div id="statusbar">
+      <span id="st-pos">就绪</span>
+      <span id="st-sel"></span>
+      <span class="st-spacer"></span>
+      <span id="st-size"></span>
+      <span id="st-lang" class="st-click" title="语言(按扩展名自动识别)">纯文本</span>
+      <span id="st-eol" class="st-click" title="换行符,点击切换">CRLF</span>
+      <span id="st-enc" class="st-click" title="编码,点击切换/重新打开">UTF-8</span>
+    </div>
+
+    <div id="popup-layer"></div>
+    <div id="modal-layer"></div>
+    <div id="toast"></div>
+  </body>
+</html>
