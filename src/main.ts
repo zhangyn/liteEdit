@@ -14,6 +14,8 @@ import {
 } from './tabs'
 import { recordCursor } from './cursor-history'
 import { applyTool } from './tools'
+import { codecActions } from './codecs'
+import { initFindInFiles, openFindInFilesDialog } from './findinfiles'
 import { initToolbar, applyToolbarVisible, refreshToolbarStates } from './toolbar'
 
 /** 全局快捷键兜底表(原生菜单加速键失效时也能用;同一动作 120ms 内去重防双触发) */
@@ -23,6 +25,7 @@ const KEY_ACTIONS: Record<string, string> = {
   'Ctrl+F4': 'close_tab', 'Ctrl+Tab': 'next_tab', 'Ctrl+Shift+Tab': 'prev_tab',
   'Ctrl+z': 'undo', 'Ctrl+y': 'redo',
   'Ctrl+f': 'find', 'Ctrl+h': 'replace', 'F3': 'find_next', 'Shift+F3': 'find_prev',
+  'Ctrl+Shift+f': 'find_in_files',
   'Ctrl+g': 'goto', 'Ctrl+d': 'duplicate_line', 'Ctrl+Shift+k': 'delete_line',
   'Ctrl+Alt+ArrowUp': 'move_line_up', 'Ctrl+Alt+ArrowDown': 'move_line_down',
   'Ctrl+Enter': 'open_line_below', 'Ctrl+Shift+Enter': 'open_line_above',
@@ -198,6 +201,9 @@ async function dispatchAction(id: string) {
     case 'replace':
       openSearchPanel(view)
       break
+    case 'find_in_files':
+      openFindInFilesDialog()
+      break
     case 'find_next':
       findNext(view)
       break
@@ -285,6 +291,11 @@ async function dispatchAction(id: string) {
         kind: 'info',
       })
       break
+    default:
+      if (codecActions[id]) {
+        codecActions[id]()
+      }
+      break
   }
 }
 
@@ -354,6 +365,7 @@ async function boot() {
 
   initStatusbar(reloadAsPrompt)
   initPreview()
+  initFindInFiles()
   initSidebar()
   applySidebarVisible(settings.sidebar)
   initToolbar((id) => void dispatchAction(id))

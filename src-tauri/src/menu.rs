@@ -68,6 +68,8 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .item(&MenuItem::with_id(app, "find_prev", "查找上一个", true, Some("Shift+F3"))?)
         .separator()
         .item(&MenuItem::with_id(app, "goto", "转到行…", true, Some("Ctrl+G"))?)
+        .separator()
+        .item(&MenuItem::with_id(app, "find_in_files", "在文件中查找…  Ctrl+Shift+F", true, None::<&str>)?)
         .build()?;
 
     // ── 查看 ──────────────────────────────────────────────
@@ -112,6 +114,15 @@ pub fn build(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .item(&MenuItem::with_id(app, "sort_asc", "行排序(升序)", true, None::<&str>)?)
         .item(&MenuItem::with_id(app, "sort_desc", "行排序(降序)", true, None::<&str>)?)
         .item(&MenuItem::with_id(app, "sort_unique", "删除重复行", true, None::<&str>)?)
+        .separator()
+        .item(&MenuItem::with_id(app, "codec_ts_to_date", "时间戳 → 日期时间", true, None::<&str>)?)
+        .item(&MenuItem::with_id(app, "codec_date_to_ts", "日期时间 → 时间戳", true, None::<&str>)?)
+        .separator()
+        .item(&MenuItem::with_id(app, "codec_b64_encode", "Base64 编码", true, None::<&str>)?)
+        .item(&MenuItem::with_id(app, "codec_b64_decode", "Base64 解码", true, None::<&str>)?)
+        .separator()
+        .item(&MenuItem::with_id(app, "codec_url_encode", "URL 编码", true, None::<&str>)?)
+        .item(&MenuItem::with_id(app, "codec_url_decode", "URL 解码", true, None::<&str>)?)
         .build()?;
 
     // ── 帮助 ──────────────────────────────────────────────

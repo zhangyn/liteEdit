@@ -18,8 +18,9 @@ import {
   rectangularSelection,
   crosshairCursor,
 } from '@codemirror/view'
-import { bracketMatching, indentOnInput, indentUnit, syntaxHighlighting, HighlightStyle, type LanguageSupport } from '@codemirror/language'
+import { bracketMatching, indentOnInput, indentUnit, syntaxHighlighting, HighlightStyle, foldGutter, foldKeymap, type LanguageSupport } from '@codemirror/language'
 import { history, historyKeymap, defaultKeymap, indentWithTab, moveLineUp, moveLineDown } from '@codemirror/commands'
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { cursorHistoryKeymap } from './cursor-history'
@@ -300,8 +301,10 @@ export function baseExtensions(): Extension[] {
   return [
     phrases,
     lineNumbers(),
+    foldGutter(),
     highlightActiveLineGutter(),
     highlightSpecialChars(),
+    closeBrackets(),
     history(),
     drawSelection(),
     dropCursor(),
@@ -333,6 +336,8 @@ export function baseExtensions(): Extension[] {
       { key: 'Mod-x', run: expandToLine },
       // Ctrl+M 切换菜单栏:经自定义事件交给 main(main 持有 applyMenuHidden)
       { key: 'Mod-m', run: () => { window.dispatchEvent(new CustomEvent('litedit:toggle-menubar')); return true } },
+      ...closeBracketsKeymap,
+      ...foldKeymap,
       ...defaultKeymap,
       ...historyKeymap,
       ...searchKeymap,

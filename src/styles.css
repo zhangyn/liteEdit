@@ -69,9 +69,43 @@ body { display: flex; flex-direction: column; user-select: none; }
 #toolbar { order: 0; }
 #tabbar { order: 1; }
 #main { order: 2; }
-#statusbar { order: 3; }
-body[data-tabs='bottom'] #tabbar { order: 3; }
-body[data-tabs='bottom'] #statusbar { order: 2; }
+#findres { order: 3; }
+#statusbar { order: 4; }
+body[data-tabs='bottom'] #main { order: 1; }
+body[data-tabs='bottom'] #findres { order: 2; }
+body[data-tabs='bottom'] #statusbar { order: 3; }
+body[data-tabs='bottom'] #tabbar { order: 4; }
+
+/* ── 在文件中查找结果面板 ─────────────────────────────── */
+#findres {
+  flex: none;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+}
+#findres.hidden { display: none; }
+#findres-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: var(--fg-dim);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+#findres-list { flex: 1; overflow: auto; font-family: var(--font-mono); font-size: 12px; padding: 2px 0; user-select: text; }
+.fr-file {
+  padding: 2px 10px;
+  color: var(--accent);
+  background: var(--bg-active);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.fr-item { padding: 0 10px 0 26px; cursor: pointer; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+.fr-item:hover { background: var(--bg-active); }
 
 /* ── 工具栏 ───────────────────────────────────────────── */
 #toolbar {
